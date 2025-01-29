@@ -14,7 +14,7 @@
 
 # opensemantic
 
-> This is the Python namespace package for Python equivalents of world.opensemantic page packages.
+> This is the top-level Python namespace package for libraries with Python models derived from page packages that reside under world.opensemantic.
 
 A longer description of your project goes here...
 
