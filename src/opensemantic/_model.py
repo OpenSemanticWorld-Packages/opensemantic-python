@@ -7,7 +7,6 @@ from uuid import UUID, uuid4
 from warnings import warn
 
 from oold.model.v1 import LinkedBaseModel
-from osw.utils.strings import pascal_case
 from pydantic.v1 import BaseModel, Field, constr
 
 from opensemantic.custom_types import NoneType
@@ -24,6 +23,25 @@ if TYPE_CHECKING:
     from dataclasses import dataclass as _basemodel_decorator
 else:
     _basemodel_decorator = lambda x: x  # noqa: E731
+
+# ToDo: from osw.utils.strings import pascal_case
+
+
+def pascal_case(st: str) -> str:
+    """converts a string to PascalCase
+
+    Parameters
+    ----------
+    st
+        the string to convert to PascalCase
+
+    Returns
+    -------
+        The string in PascalCase
+    """
+    if not st.isalnum():
+        st = "".join(x for x in st.title() if x.isalnum())
+    return st[0].upper() + st[1:]
 
 
 def custom_issubclass(obj: Union[type, T], class_name: str) -> bool:
