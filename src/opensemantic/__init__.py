@@ -14,3 +14,10 @@ except PackageNotFoundError:  # pragma: no cover
     __version__ = "unknown"
 finally:
     del version, PackageNotFoundError
+
+from opensemantic._model import (  # noqa
+    OswBaseModel,
+    get_full_title,
+    get_namespace,
+    get_title,
+)
