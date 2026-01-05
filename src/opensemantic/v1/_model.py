@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Literal, Optional, Type, TypeVar, Union
 from uuid import UUID, uuid4
 from warnings import warn
 
-from oold.model import LinkedBaseModel
-from pydantic import BaseModel, Field, constr
+from oold.model.v1 import LinkedBaseModel
+from pydantic.v1 import BaseModel, Field, constr
 
 from opensemantic.custom_types import NoneType
 
@@ -110,6 +110,11 @@ class OswBaseModel(LinkedBaseModel):
         # extra = "ignore"
         # Additional fields are ignored
         validate_assignment = True
+        # Ensures that the assignment of a value to a field is validated
+        smart_union = True
+        # To avoid unexpected coercing of types, the smart_union option is enabled
+        # See: https://docs.pydantic.dev/1.10/usage/model_config/#smart-union
+        # Not required in v2 as this will become the new default
 
     def __init__(self, **data):
         if data.get("label"):
@@ -142,10 +147,10 @@ class OswBaseModel(LinkedBaseModel):
     @classmethod
     def get_cls_iri(cls) -> str:
         schema = {}
-        # pydantic v2
-        if hasattr(cls, "model_config"):
-            if "json_schema_extra" in cls.model_config:
-                schema = cls.model_config["json_schema_extra"]
+        # pydantic v1
+        if hasattr(cls, "__config__"):
+            if hasattr(cls.__config__, "schema_extra"):
+                schema = cls.__config__.schema_extra
 
         if "uuid" in schema:
             namespace = "Category"
