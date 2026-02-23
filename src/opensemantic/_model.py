@@ -147,7 +147,20 @@ class OswBaseModel(LinkedBaseModel):
             if "json_schema_extra" in cls.model_config:
                 schema = cls.model_config["json_schema_extra"]
 
-        if "uuid" in schema:
+        title = schema.get("title", None)
+        if title is not None and title in [
+            "Entity",
+            "Category",
+            "Item",
+            "Property",
+            "AnnotationProperty",
+            "ObjectProperty",
+            "DataProperty",
+            "QuantityProperty",
+        ]:
+            return "Category:" + title
+
+        elif "uuid" in schema:
             namespace = "Category"
             osw_id = "OSW" + schema["uuid"].replace("-", "")
             iri = f"{namespace}:{osw_id}"
