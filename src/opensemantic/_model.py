@@ -3,7 +3,7 @@ This module is to be imported in the dynamically created and updated entity.py m
 """
 
 from typing import TYPE_CHECKING, Literal, Optional, Type, TypeVar, Union
-from uuid import UUID, uuid4
+from uuid import UUID, uuid4, uuid5
 from warnings import warn
 
 from oold.model import LinkedBaseModel
@@ -334,7 +334,11 @@ def get_osw_id(entity: Union[OswBaseModel, Type[OswBaseModel]]) -> Union[str, No
     from_uuid = None if uuid is None else f"OSW{str(uuid).replace('-', '')}"
     if osw_id is None:
         return from_uuid
-    if osw_id != from_uuid:
+    # For composite subobject IDs (OSW<parent>#OSW<child>), validate the child part
+    osw_id_to_check = osw_id
+    if "#" in osw_id:
+        osw_id_to_check = osw_id.split("#", 1)[1]
+    if osw_id_to_check != from_uuid:
         raise ValueError(f"OSW-ID does not match UUID: {osw_id} != {from_uuid}")
     return osw_id
 
@@ -418,6 +422,27 @@ def get_full_title(entity: OswBaseModel) -> Union[str, NoneType]:
         return namespace + ":" + title
     elif title is not None:
         return title
+
+
+def compute_scoped_uuid(parent_uuid: UUID, child_id: str) -> UUID:
+    """Compute a deterministic UUID for a child entity scoped to a parent.
+
+    Uses uuid5 with the parent's UUID as the namespace and the child's
+    identifier (e.g. node_id) as the name. This ensures the same child_id
+    produces different UUIDs under different parents.
+
+    Parameters
+    ----------
+    parent_uuid
+        The parent entity's UUID, used as the uuid5 namespace.
+    child_id
+        The child's unique identifier within the parent (e.g. OPC UA node_id).
+
+    Returns
+    -------
+        A deterministic UUID unique to this parent-child combination.
+    """
+    return uuid5(parent_uuid, child_id)
 
 
 class Ontology(OswBaseModel):

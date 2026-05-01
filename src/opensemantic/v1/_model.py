@@ -339,7 +339,11 @@ def get_osw_id(entity: Union[OswBaseModel, Type[OswBaseModel]]) -> Union[str, No
     from_uuid = None if uuid is None else f"OSW{str(uuid).replace('-', '')}"
     if osw_id is None:
         return from_uuid
-    if osw_id != from_uuid:
+    # For composite subobject IDs (OSW<parent>#OSW<child>), validate the child part
+    osw_id_to_check = osw_id
+    if "#" in osw_id:
+        osw_id_to_check = osw_id.split("#", 1)[1]
+    if osw_id_to_check != from_uuid:
         raise ValueError(f"OSW-ID does not match UUID: {osw_id} != {from_uuid}")
     return osw_id
 

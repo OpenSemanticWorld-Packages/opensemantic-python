@@ -17,6 +17,7 @@ finally:
 
 from opensemantic._model import (  # noqa
     OswBaseModel,
+    compute_scoped_uuid,
     get_full_title,
     get_namespace,
     get_title,
