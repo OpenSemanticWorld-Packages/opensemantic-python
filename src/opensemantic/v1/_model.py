@@ -4,7 +4,6 @@ This module is to be imported in the dynamically created and updated entity.py m
 
 from typing import TYPE_CHECKING, Literal, Optional, Type, TypeVar, Union
 from uuid import UUID, uuid4
-from warnings import warn
 
 from oold.model.v1 import LinkedBaseModel
 from pydantic.v1 import BaseModel, Field, constr
@@ -117,28 +116,13 @@ class OswBaseModel(LinkedBaseModel):
         # Not required in v2 as this will become the new default
 
     def __init__(self, **data):
-        if data.get("label"):
-            if not isinstance(data["label"], list):
-                raise ValueError(
-                    "label must be a list of Label objects",
-                )
-            labels = []
-            for label in data["label"]:
-                if isinstance(label, dict):
-                    labels.append(Label(**label))
-                else:
-                    # The list element should be a Label object
-                    labels.append(label)
-            data["label"] = labels
-            # Ensure that the label attribute is a list of Label objects, but use
-            #  custom_isinstance to avoid circular imports and ValidationError since
-            #  osw.model.entity defines its own Label class
-            if not all(custom_isinstance(label, "Label") for label in data["label"]):
-                raise ValueError(
-                    "label must be a list of Label objects",
-                )
-        if data.get("name") is None and "label" in data:
-            data["name"] = pascal_case(data["label"][0].text)
+        if data.get("name") is None and data.get("label"):
+            label = data["label"]
+            if isinstance(label, list) and len(label) > 0:
+                first = label[0]
+                text = first.text if hasattr(first, "text") else first.get("text")
+                if text:
+                    data["name"] = pascal_case(text)
         if "uuid" not in data:
             # If no uuid is provided, generate a new one
             data["uuid"] = OswBaseModel._init_uuid(**data)
@@ -197,82 +181,8 @@ class OswBaseModel(LinkedBaseModel):
                 #  considered as discriminator
         return d
 
-    def cast(
-        self,
-        cls: Union[Type[T], type],
-        none_to_default: bool = False,
-        remove_extra: bool = False,
-        silent: bool = True,
-        **kwargs,
-    ) -> T:
-        """Casting self into target class
-
-        Parameters
-        ----------
-        cls
-            target class
-        kwargs
-            additional attributes to be set
-        none_to_default
-            If True, attributes that are None will be set to their default value
-        remove_extra
-            If True, extra attributes that are passed to the constructor are removed
-        silent
-            If True, no warnings are printed
-        Returns
-        -------
-        instance of target class
-        """
-
-        def empty_list_or_none(
-            obj: Union[
-                NoneType,
-                list,
-            ],
-        ) -> bool:
-            if obj is None:
-                return True
-            elif isinstance(obj, list):
-                if len(obj) == 0:
-                    return True
-                elif len([item for item in obj if item is not None]) == 0:
-                    return True
-            return False
-
-        combined_args = {**self.dict(), **kwargs}
-        none_args = []
-        if none_to_default:
-            reduced = {}
-            for k, v in combined_args.items():
-                if empty_list_or_none(v):
-                    none_args.append(k)
-                else:
-                    reduced[k] = v
-            combined_args = reduced
-        extra_args = []
-        if remove_extra:
-            reduced = {}
-            for k, v in combined_args.items():
-                if k not in cls.__fields__.keys():
-                    extra_args.append(k)
-                else:
-                    reduced[k] = v
-            combined_args = reduced
-        if not silent:
-            if none_to_default and none_args:
-                warn(f"Removed attributes with None or empty list values: {none_args}")
-            if remove_extra and extra_args:
-                warn(f"Removed extra attributes: {extra_args}")
-        if "type" in combined_args:
-            del combined_args["type"]
-        return cls(**combined_args)
-
-    def cast_none_to_default(self, cls: Union[Type[T], type], **kwargs) -> T:
-        """Casting self into target class. If the passed attribute is None or solely
-        includes None values, the attribute is not passed to the instance of the
-        target class, which will then fall back to the default."""
-
-        return self.cast(cls, none_to_default=True, **kwargs)
+    # cast() and cast_none_to_default() are inherited from
+    # LinkedBaseModel (oold.model.v1)
 
     def get_uuid(self) -> Union[str, UUID, NoneType]:
         """Getter for the attribute 'uuid' of the entity

@@ -16,7 +16,42 @@
 
 # opensemantic
 
-> This is the top-level Python namespace package for libraries with Python models derived from page packages that reside under world.opensemantic
+> Top-level namespace package for Python models derived from OpenSemanticWorld page packages.
+
+Builds on [oold-python](https://github.com/OpenSemanticWorld/oold-python) (`LinkedBaseModel`, `BaseController`, `cast()`, type registry, backend resolution).
+
+## Key exports
+
+- **`OswBaseModel`** - base class for all opensemantic data models
+- **`compute_scoped_uuid(parent_uuid, child_id)`** - deterministic UUID generation scoped to a parent entity
+
+```python
+from opensemantic import OswBaseModel, compute_scoped_uuid
+```
+
+## OswBaseModel (extends oold LinkedBaseModel)
+
+Adds opensemantic-specific features on top of oold's `LinkedBaseModel`:
+
+- **Auto-name from label**: if `name` is not provided, auto-generated from `label[0].text` using PascalCase
+- **Auto-UUID**: if `uuid` is not provided, a random uuid4 is generated. Override `_init_uuid(**data)` for deterministic UUIDs
+- **get_osw_id()**: returns `OSW<uuid_without_dashes>`. Handles composite subobject IDs (`OSW<parent>#OSW<child>`)
+- **get_iri()**: returns `<namespace>:<osw_id>` (e.g. `Item:OSW...`, `Category:OSW...`)
+
+Features inherited from oold (`LinkedBaseModel`): `cast()`, `to_json()`, `from_json()`, `__iris__` range field handling, `_types` registry, backend resolution. See the [oold README](https://github.com/OpenSemanticWorld/oold-python).
+
+## Pydantic v1 and v2
+
+All opensemantic packages maintain dual model versions:
+- `opensemantic.<pkg>` / `opensemantic.<pkg>._model` - Pydantic v2 (default)
+- `opensemantic.<pkg>.v1` / `opensemantic.<pkg>.v1._model` - Pydantic v1
+
+```python
+from opensemantic.core.v1 import Label      # v1
+from opensemantic.core import Label          # v2 (default)
+```
+
+## Namespace package structure
 
 To mimic the hierarchy and naming conventions of the page packages listed under [OpenSemanticWorld-Packages]
 (https://github.com/OpenSemanticWorld-Packages), we have created this namespace package. Eventually it will contain
