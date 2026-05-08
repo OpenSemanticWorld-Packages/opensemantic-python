@@ -19,6 +19,64 @@ def test_opensemantic():
     ), "Failed to create an instance of OswBaseModel_v1"
 
 
+def test_model_instance_constructor_v2():
+    """OswBaseModel(other_model, extra=...) passes through to LinkedBaseModel."""
+    from oold.model import LinkedBaseModel
+
+    class ModelA(LinkedBaseModel):
+        value: float = 0.0
+
+    class ModelB(LinkedBaseModel):
+        value: float = 0.0
+        extra: str = "default"
+
+    a = ModelA(value=42.0)
+    b = ModelB(a, extra="custom")
+    assert b.value == 42.0
+    assert b.extra == "custom"
+
+    # Test with a subclass that has uuid (like Entity)
+    class WithUuid(OswBaseModel):
+        from uuid import UUID as _UUID
+
+        uuid: _UUID = None
+        value: float = 0.0
+
+    u1 = WithUuid(value=1.0)
+    u2 = WithUuid(u1, value=2.0)
+    assert u2.uuid == u1.uuid
+    assert u2.value == 2.0
+
+
+def test_model_instance_constructor_v1():
+    """OswBaseModel_v1(other_model, extra=...) passes through."""
+    from oold.model.v1 import LinkedBaseModel
+
+    class ModelA(LinkedBaseModel):
+        value: float = 0.0
+
+    class ModelB(LinkedBaseModel):
+        value: float = 0.0
+        extra: str = "default"
+
+    a = ModelA(value=42.0)
+    b = ModelB(a, extra="custom")
+    assert b.value == 42.0
+    assert b.extra == "custom"
+
+    # Test with a subclass that has uuid
+    class WithUuid(OswBaseModel_v1):
+        from uuid import UUID as _UUID
+
+        uuid: _UUID = None
+        value: float = 0.0
+
+    u1 = WithUuid(value=1.0)
+    u2 = WithUuid(u1, value=2.0)
+    assert u2.uuid == u1.uuid
+    assert u2.value == 2.0
+
+
 if __name__ == "__main__":
     test_opensemantic()
     print("All tests passed!")

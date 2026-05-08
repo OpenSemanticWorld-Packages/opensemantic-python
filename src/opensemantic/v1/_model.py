@@ -115,18 +115,23 @@ class OswBaseModel(LinkedBaseModel):
         # See: https://docs.pydantic.dev/1.10/usage/model_config/#smart-union
         # Not required in v2 as this will become the new default
 
-    def __init__(self, **data):
-        if data.get("name") is None and data.get("label"):
-            label = data["label"]
-            if isinstance(label, list) and len(label) > 0:
-                first = label[0]
-                text = first.text if hasattr(first, "text") else first.get("text")
-                if text:
-                    data["name"] = pascal_case(text)
-        if "uuid" not in data:
-            # If no uuid is provided, generate a new one
-            data["uuid"] = OswBaseModel._init_uuid(**data)
-        super().__init__(**data)
+    def __init__(self, *args, **data):
+        # Skip auto-generation when a model instance is passed (cast handles it)
+        if not (args and hasattr(args[0], "to_json")):
+            if (
+                data.get("name") is None
+                and data.get("label")
+                and "name" in self.__fields__
+            ):
+                label = data["label"]
+                if isinstance(label, list) and len(label) > 0:
+                    first = label[0]
+                    text = first.text if hasattr(first, "text") else first.get("text")
+                    if text:
+                        data["name"] = pascal_case(text)
+            if "uuid" not in data and "uuid" in self.__fields__:
+                data["uuid"] = OswBaseModel._init_uuid(**data)
+        super().__init__(*args, **data)
 
     @classmethod
     def get_cls_iri(cls) -> str:

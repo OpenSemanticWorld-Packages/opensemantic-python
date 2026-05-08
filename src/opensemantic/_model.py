@@ -110,18 +110,23 @@ class OswBaseModel(LinkedBaseModel):
         # Additional fields are ignored
         validate_assignment = True
 
-    def __init__(self, **data):
-        if data.get("name") is None and data.get("label"):
-            label = data["label"]
-            if isinstance(label, list) and len(label) > 0:
-                first = label[0]
-                text = first.text if hasattr(first, "text") else first.get("text")
-                if text:
-                    data["name"] = pascal_case(text)
-        if "uuid" not in data:
-            # If no uuid is provided, generate a new one
-            data["uuid"] = OswBaseModel._init_uuid(**data)
-        super().__init__(**data)
+    def __init__(self, *args, **data):
+        # Skip auto-generation when a model instance is passed (cast handles it)
+        if not (args and hasattr(args[0], "to_json")):
+            if (
+                data.get("name") is None
+                and data.get("label")
+                and "name" in self.model_fields
+            ):
+                label = data["label"]
+                if isinstance(label, list) and len(label) > 0:
+                    first = label[0]
+                    text = first.text if hasattr(first, "text") else first.get("text")
+                    if text:
+                        data["name"] = pascal_case(text)
+            if "uuid" not in data and "uuid" in self.model_fields:
+                data["uuid"] = OswBaseModel._init_uuid(**data)
+        super().__init__(*args, **data)
 
     @classmethod
     def get_cls_iri(cls) -> str:
