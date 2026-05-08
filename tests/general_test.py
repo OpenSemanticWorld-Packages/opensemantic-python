@@ -80,3 +80,33 @@ def test_model_instance_constructor_v1():
 if __name__ == "__main__":
     test_opensemantic()
     print("All tests passed!")
+
+    from packaging.version import Version
+
+    # <semantic version of the source schema>.post<version of the builder>
+    # schema 0.1.0, builder 0.23.1 => 0.1.0.post000023001 (release)
+    # schema 0.1.0, builder 0.23.1 => 0.1.0.dev000023001 (pre-release)
+    print(
+        sorted(
+            [
+                "1.0",
+                "1.0a",
+                "1.0.dev",
+                "1.0b",
+                "1.0rc1",
+                "1.0.post1",
+                "1.0.post2",
+                "1.0.post1.dev1",
+                "1.0.post1.dev2",
+                "1.0.dev2",
+            ],
+            key=Version,
+        )
+    )
+    print(sorted(["0.1.0.post000023001", "0.1.0.dev000023001"], key=Version))
+    print(
+        sorted(
+            ["0.1.0.post000023002", "0.1.0.post000023001", "0.2.0.post000023001"],
+            key=Version,
+        )
+    )
