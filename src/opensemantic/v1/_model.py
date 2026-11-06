@@ -318,6 +318,10 @@ def get_title(entity: OswBaseModel) -> Union[str, NoneType]:
         if entity.meta.wiki_page.title:
             title = entity.meta.wiki_page.title
 
+    if title is None and custom_isinstance(entity, "Property"):
+        # Same rule as the wiki form editor: the name of a property is its title
+        title = getattr(entity, "name", None) or None
+
     if title is None:
         title = get_osw_id(entity)
 
